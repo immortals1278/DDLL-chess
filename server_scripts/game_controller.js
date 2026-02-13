@@ -23,6 +23,8 @@ var GameController = (function () {
             player.server.tell("§6玩家已满，游戏开始！")
             startFirstTurn(player.server)
         }
+        PieceRenderer.spawnOrMove(player)
+
     }
 
     function giveItems(player) {

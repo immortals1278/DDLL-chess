@@ -1,52 +1,54 @@
 var PieceRenderer = (function () {
 
-    var pieces = new Map()
+    var pieces = {}   // uuid → entity
 
     function spawnOrMove(player) {
-        player.tell("§b生成棋子")
 
-        var dim = player.level
-        var data = BoardState.getPlayers().get(player.uuid)
+        var id = "" + player.uuid
+        var data = BoardState.getPlayerData(player)
         if (!data) return
 
         var pos = BoardGrid.toWorldPos(data.x, data.z)
 
         // 已存在 → 移动
-        if (pieces.has(player.uuid)) {
-            var existing = pieces.get(player.uuid)
-            existing.teleportTo(pos.x + 0.5, pos.y, pos.z + 0.5)
+        if (pieces[id]) {
+            pieces[id].teleportTo(
+                pos.x + 0.5,
+                pos.y,
+                pos.z + 0.5
+            )
             return
         }
 
         // 新建棋子
-        var entity = dim.createEntity("minecraft:armor_stand")
-        entity.setPosition(pos.x + 0.5, pos.y, pos.z + 0.5)
+        var entity = player.server.overworld().createEntity("minecraft:armor_stand")
+
+        entity.setPos(
+            pos.x + 0.5,
+            pos.y,
+            pos.z + 0.5
+        )
+
         entity.setNoGravity(true)
         entity.setInvisible(false)
         entity.setCustomName(player.name)
-        entity.setCustomNameVisible(true)   // ← 这里
-        entity.setGlowing(true)
+        entity.setCustomNameVisible(true)
+        entity.setItemSlot("head", "minecraft:diamond_block")
         entity.spawn()
 
-        pieces.set(player.uuid, entity)
+        pieces[id] = entity
     }
 
-    function clearAll() {
-
-        var iterator = pieces.values()
-
-        while (iterator.hasNext()) {
-            var e = iterator.next()
-            e.kill()
+    function removeAll() {
+        for (var id in pieces) {
+            pieces[id].kill()
         }
-
-        pieces.clear()
+        pieces = {}
     }
 
     return {
         spawnOrMove: spawnOrMove,
-        clearAll: clearAll
+        removeAll: removeAll
     }
 
 })()
-
