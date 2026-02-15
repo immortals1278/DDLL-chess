@@ -13,7 +13,9 @@ const Game = {
         originY: -50,
         originZ: 0
     },
-    pieces: {} // uuid -> {x,z,entity}
+    pieces: {}, // uuid -> {x,z,entity}
+    moveMode: {} // uuid -> true/false
+
 }
 
 // ===============================
@@ -22,9 +24,9 @@ const Game = {
 
 function generateBoard(level, player) {
 
-    const baseX = Math.floor(player.x)
+    const baseX = 1
     const baseY = Game.board.originY
-    const baseZ = Math.floor(player.z)
+    const baseZ = 1
 
     Game.board.originX = baseX
     Game.board.originZ = baseZ
@@ -100,19 +102,30 @@ function spawnPiece(player) {
 
     if (Game.pieces[player.uuid]) return
 
+    const tag = `piece_${player.uuid}`
+
     Game.pieces[player.uuid] = {
         x: 0,
-        z: 0
+        z: 0,
+        tag: tag
     }
 
     const worldX = Game.board.originX + 0.5
     const worldY = Game.board.originY + 1
     const worldZ = Game.board.originZ + 0.5
 
-    player.server.runCommandSilent(
-        `summon minecraft:armor_stand ${worldX} ${worldY} ${worldZ} {CustomName:'{"text":"${player.name.string}"}',CustomNameVisible:1b,NoGravity:1b,Marker:1b}`
-    )
+    player.server.runCommand(
+    `summon minecraft:armor_stand ${worldX} ${worldY} ${worldZ} {
+        Tags:["player_piece","${tag}"],
+        CustomName:'{"text":"${player.name.string}"}',
+        CustomNameVisible:1b,
+        NoGravity:1b,
+        Invisible:0b
+    }`
+)
+
 }
+
 
 
 
