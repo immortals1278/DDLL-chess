@@ -8,8 +8,11 @@ PlayerEvents.loggedIn(event => {
     }
 
     if (!Game.started) {
+    player.server.scheduleInTicks(1, () => {
         startGame(player.level, player)
-    }
+    })
+}
+
 })
 
 

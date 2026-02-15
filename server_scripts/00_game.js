@@ -29,21 +29,64 @@ function generateBoard(level, player) {
     Game.board.originX = baseX
     Game.board.originZ = baseZ
 
-    for (let x = 0; x < Game.board.width; x++) {
-        for (let z = 0; z < Game.board.height; z++) {
+    Game.board.width = 5
+    Game.board.height = 8
 
-            const worldX = baseX + x
-            const worldZ = baseZ + z
+    const endX = baseX + (Game.board.width * 2 - 1)
+    const endZ = baseZ + (Game.board.height * 2 - 1)
 
-            level.setBlockAndUpdate(
-                BlockPos(worldX, baseY, worldZ),
-                Block.getBlock("minecraft:white_concrete").defaultBlockState()
-            )
-        }
-    }
+    // 1️⃣ 先铺满大底板
+    level.runCommandSilent(
+        `fill ${baseX} ${baseY} ${baseZ} ${endX} ${baseY} ${endZ} minecraft:white_concrete`
+    )
+
+    // 2️⃣ 清除间隔格
+    //行
+    level.runCommandSilent(
+        `fill ${baseX+1} ${baseY} ${baseZ} ${baseX+1} ${baseY} ${endZ} air replace minecraft:white_concrete`
+    )
+    level.runCommandSilent(
+        `fill ${baseX+3} ${baseY} ${baseZ} ${baseX+3} ${baseY} ${endZ} air replace minecraft:white_concrete`
+    )
+    level.runCommandSilent(
+        `fill ${baseX+5} ${baseY} ${baseZ} ${baseX+5} ${baseY} ${endZ} air replace minecraft:white_concrete`
+    )
+    level.runCommandSilent(
+        `fill ${baseX+7} ${baseY} ${baseZ} ${baseX+7} ${baseY} ${endZ} air replace minecraft:white_concrete`
+    )
+    level.runCommandSilent(
+        `fill ${baseX+9} ${baseY} ${baseZ} ${baseX+9} ${baseY} ${endZ} air replace minecraft:white_concrete`
+    )
+    //列
+    level.runCommandSilent(
+        `fill ${baseX} ${baseY} ${baseZ+1} ${endX} ${baseY} ${baseZ+1} air replace minecraft:white_concrete`
+    )
+    level.runCommandSilent(
+        `fill ${baseX} ${baseY} ${baseZ+3} ${endX} ${baseY} ${baseZ+3} air replace minecraft:white_concrete`
+    )
+    level.runCommandSilent(
+        `fill ${baseX} ${baseY} ${baseZ+5} ${endX} ${baseY} ${baseZ+5} air replace minecraft:white_concrete`
+    )
+    level.runCommandSilent(
+        `fill ${baseX} ${baseY} ${baseZ+7} ${endX} ${baseY} ${baseZ+7} air replace minecraft:white_concrete`
+    )
+    level.runCommandSilent(
+        `fill ${baseX} ${baseY} ${baseZ+9} ${endX} ${baseY} ${baseZ+9} air replace minecraft:white_concrete`
+    )
+    level.runCommandSilent(
+        `fill ${baseX} ${baseY} ${baseZ+11} ${endX} ${baseY} ${baseZ+11} air replace minecraft:white_concrete`
+    )
+    level.runCommandSilent(
+        `fill ${baseX} ${baseY} ${baseZ+13} ${endX} ${baseY} ${baseZ+13} air replace minecraft:white_concrete`
+    )
+    level.runCommandSilent(
+        `fill ${baseX} ${baseY} ${baseZ+15} ${endX} ${baseY} ${baseZ+15} air replace minecraft:white_concrete`
+    )
 
     level.runCommandSilent("say 棋盘生成完成")
 }
+
+
 
 
 
@@ -67,9 +110,10 @@ function spawnPiece(player) {
     const worldZ = Game.board.originZ + 0.5
 
     player.server.runCommandSilent(
-        `/summon minecraft:armor_stand ${worldX} ${worldY} ${worldZ} {CustomName:'{"text":"${player.name.string}"}',CustomNameVisible:1b,NoGravity:1b}`
+        `summon minecraft:armor_stand ${worldX} ${worldY} ${worldZ} {CustomName:'{"text":"${player.name.string}"}',CustomNameVisible:1b,NoGravity:1b,Marker:1b}`
     )
 }
+
 
 
 // ===============================
