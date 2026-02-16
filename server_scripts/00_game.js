@@ -16,7 +16,17 @@ const Game = {
     pieces: {}, // uuid -> {x,z,entity}
     moveMode: {}, // uuid -> true/false
     obstacles: new Set(), // 存 "x,z"
-    
+    jumpPads: new Set([
+    "0,3",
+    "2,3",
+    "4,3"
+    ]),
+    togglePads: [
+    {x:1, y:-49, z:7},
+    {x:5, y:-49, z:7},
+    {x:9, y:-49, z:7}
+    ],
+    obstacles: [],
 
 
 
@@ -87,6 +97,17 @@ function generateBoard(level, player) {
     )
     level.runCommandSilent(
         `fill ${baseX} ${baseY} ${baseZ+15} ${endX} ${baseY} ${baseZ+15} air replace minecraft:white_concrete`
+    )
+
+    // 跳板
+    level.runCommandSilent(
+        `setblock 1 -49 7 minecraft:slime_block`
+    )
+    level.runCommandSilent(
+        `setblock 5 -49 7 minecraft:slime_block`
+    )
+    level.runCommandSilent(
+        `setblock 9 -49 7 minecraft:slime_block`
     )
 
     level.runCommandSilent("say 棋盘生成完成")

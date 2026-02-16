@@ -222,6 +222,156 @@ BlockEvents.rightClicked(event => {
     }
 })
 
+//跳板逻辑
+ItemEvents.rightClicked(event => {
+
+    const player = event.player
+    const level = event.level
+    const uuid = player.uuid
+
+    if (!Game.started) return
+    if (!event.item.is("minecraft:slime_ball")) return
+
+    // 必须轮到当前玩家
+    const currentUUID = Game.players[Game.turnIndex]
+    if (uuid !== currentUUID) {
+        player.tell("§c还没到你")
+        return
+    }
+
+    const piece = Game.pieces[uuid]
+    if (!piece) return
+
+    let jumped = false
+    let newZ = piece.z
+
+    // ===== 向前跳 =====
+    let frontPad = `${piece.x},${piece.z + 1}`
+    if (Game.jumpPads.has(frontPad)) {
+
+        newZ = piece.z + 2
+        jumped = true
+    }
+
+    // ===== 向后跳 =====
+    let backPad = `${piece.x},${piece.z - 1}`
+    if (!jumped && Game.jumpPads.has(backPad)) {
+
+        newZ = piece.z - 2
+        jumped = true
+    }
+
+    if (!jumped) {
+        player.tell("§c前后没有跳板")
+        return
+    }
+
+    // ===== 边界检测 =====
+    if (newZ < 0 || newZ >= Game.board.height) {
+        player.tell("§c不能跳出棋盘")
+        return
+    }
+
+    const key = `${piece.x},${newZ}`
+
+    // ===== 障碍检测 =====
+    if (Game.obstacles.has(key)) {
+        player.tell("§c落点有障碍")
+        return
+    }
+
+    // ===== 棋子检测 =====
+    for (let id in Game.pieces) {
+        if (id === uuid) continue
+        const p = Game.pieces[id]
+        if (p.x === piece.x && p.z === newZ) {
+            player.tell("§c落点有棋子")
+            return
+        }
+    }
+
+    // ===== 通过检测，执行跳跃 =====
+    piece.z = newZ
+
+    const worldX = Game.board.originX + piece.x * 2
+    const worldY = Game.board.originY + 1
+    const worldZ = Game.board.originZ + piece.z * 2
+
+    player.server.runCommandSilent(
+        `execute as @e[type=minecraft:armor_stand,tag=${piece.tag}] run tp @s ${worldX} ${worldY} ${worldZ}`
+    )
+
+    player.tell("§a跳跃成功")
+
+    // ===== 消耗回合 =====
+    Game.turnIndex++
+    if (Game.turnIndex >= Game.players.length) {
+        Game.turnIndex = 0
+    }
+})
+
+
+//切换方块
+BlockEvents.rightClicked(event => {
+
+    const player = event.player
+    const level = event.level
+    const uuid = player.uuid
+
+    if (!Game.started) return
+    if (player.mainHandItem.id !== "minecraft:bread") return
+
+    // 必须轮到当前玩家
+    const currentUUID = Game.players[Game.turnIndex]
+    if (uuid !== currentUUID) {
+        player.tell("§c还没到你")
+        return
+    }
+
+    const bx = event.block.pos.x
+    const by = event.block.pos.y
+    const bz = event.block.pos.z
+
+    // 检查是否是那三个坐标之一
+    let valid = Game.togglePads.find(p => 
+        p.x === bx && p.y === by && p.z === bz
+    )
+
+    if (!valid) return
+
+    const blockId = event.block.id
+
+    // ===== 切换逻辑 =====
+    if (blockId === "minecraft:slime_block") {
+
+        level.runCommandSilent(
+            `setblock ${bx} ${by} ${bz} minecraft:obsidian`
+        )
+
+        player.tell("§c跳板已变为障碍")
+
+    } else if (blockId === "minecraft:obsidian") {
+
+        level.runCommandSilent(
+            `setblock ${bx} ${by} ${bz} minecraft:slime_block`
+        )
+
+        player.tell("§a障碍已变为跳板")
+
+    } else {
+        return
+    }
+
+    // ===== 消耗物品 =====
+    player.mainHandItem.count--
+
+    // ===== 消耗回合 =====
+    Game.turnIndex++
+    if (Game.turnIndex >= Game.players.length) {
+        Game.turnIndex = 0
+    }
+
+})
 
 
 
