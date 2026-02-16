@@ -119,12 +119,15 @@ ItemEvents.rightClicked(event => {
     `execute as @e[type=minecraft:armor_stand,tag=${piece.tag}] run tp @s ${worldX} ${worldY} ${worldZ}`
 )
 
-    player.tell(`§a已移动到 ${piece.x}, ${piece.z}`)
+    //player.tell(`§a已移动到 ${piece.x}, ${piece.z}`)
 
     // 到达底部
 if (piece.z === Game.board.height - 1) {
     piece.reachedEnd = true
-    player.tell("§b已到达终点，返回起点即可获胜")
+    player.tell("§b获得宝藏,尽快返回起点")
+    event.level.runCommandSilent(
+        `title @a title {"text":"${player.name.string} 拿到宝藏！","color":"blue","bold":true}`
+    )
 }
 
 // 如果已经到过终点，并且回到起点
@@ -132,6 +135,9 @@ if (piece.reachedEnd && piece.z === 0) {
 
     event.level.runCommandSilent(
         `say §6${player.name.string} 获胜！`
+    )
+    event.level.runCommandSilent(
+        `title @a title {"text":"${player.name.string} 获胜！","color":"gold","bold":true}`
     )
 
     endGame(event.level)

@@ -111,6 +111,36 @@ function generateBoard(level, player) {
     )
 
     level.runCommandSilent("say 棋盘生成完成")
+
+    //获得物品
+    level.runCommandSilent(
+        `give @a minecraft:cobblestone{CanPlaceOn:["minecraft:white_concrete"]} 3`
+    )
+    level.runCommandSilent(
+        `give @a minecraft:compass 1`
+    )
+    level.runCommandSilent(
+        `give @a minecraft:redstone 1`
+    )
+    level.runCommandSilent(
+        `give @a minecraft:lapis_lazuli 1`
+    )
+    level.runCommandSilent(
+    `give @a minecraft:iron_ingot 1`
+    )
+    level.runCommandSilent(
+        `give @a minecraft:gold_ingot 1`
+    )
+    level.runCommandSilent(
+        `give @a minecraft:slime_ball 1`
+    )
+    level.runCommandSilent(
+        `give @a minecraft:bread 1`
+    )
+    
+
+
+
 }
 
 
@@ -146,7 +176,17 @@ function spawnPiece(player) {
         CustomName:'{"text":"${player.name.string}"}',
         CustomNameVisible:1b,
         NoGravity:1b,
-        Invisible:0b
+        Invisible:0b,
+        ArmorItems:[
+            {id:"minecraft:iron_boots",Count:1b},
+            {id:"minecraft:iron_leggings",Count:1b},
+            {id:"minecraft:iron_chestplate",Count:1b},
+            {id:"minecraft:jack_o_lantern",Count:1b}
+        ],
+        HandItems:[
+            {id:"minecraft:diamond_sword",Count:1b},
+            {}
+        ]
     }`
 )
 
