@@ -91,7 +91,7 @@ ItemEvents.rightClicked(event => {
 
     // ===== 障碍检测 =====
     const key = `${newX},${newZ}`
-    if (Game.obstacles.has(key)) {
+    if (Game.obstacles.includes(key)) {
         player.tell("§c前方有障碍物")
         return
     }
@@ -185,7 +185,7 @@ BlockEvents.rightClicked(event => {
     const key = `${gridX},${gridZ}`
 
     // 已有障碍
-    if (Game.obstacles.has(key)) {
+    if (Game.obstacles.includes(key)) {
         player.tell("§c这里已有障碍")
         return
     }
@@ -200,7 +200,7 @@ BlockEvents.rightClicked(event => {
     }
 
     // ===== 放置障碍 =====
-    Game.obstacles.add(key)
+    Game.obstacles.push(key)
 
     const worldX = Game.board.originX + gridX * 2
     const worldY = Game.board.originY + 1
@@ -275,7 +275,7 @@ ItemEvents.rightClicked(event => {
     const key = `${piece.x},${newZ}`
 
     // ===== 障碍检测 =====
-    if (Game.obstacles.has(key)) {
+    if (Game.obstacles.includes(key)) {
         player.tell("§c落点有障碍")
         return
     }
@@ -289,6 +289,11 @@ ItemEvents.rightClicked(event => {
             return
         }
     }
+
+    // ===== 检查当前脚下是否是跳板 =====
+
+    
+
 
     // ===== 通过检测，执行跳跃 =====
     piece.z = newZ
@@ -342,11 +347,21 @@ BlockEvents.rightClicked(event => {
     const blockId = event.block.id
 
     // ===== 切换逻辑 =====
+    const gridX = Math.floor((bx - Game.board.originX) / 2)
+    const gridZ = Math.floor((bz - Game.board.originZ) / 2)
+    const key = `${gridX},${gridZ}`
+
     if (blockId === "minecraft:slime_block") {
 
         level.runCommandSilent(
             `setblock ${bx} ${by} ${bz} minecraft:obsidian`
         )
+
+        // ✅ 从跳板集合移除
+        Game.jumpPads.delete(key)
+
+        // ✅ 加入障碍集合
+        Game.obstacles.push(key)
 
         player.tell("§c跳板已变为障碍")
 
@@ -356,14 +371,21 @@ BlockEvents.rightClicked(event => {
             `setblock ${bx} ${by} ${bz} minecraft:slime_block`
         )
 
+        // ✅ 从障碍集合移除
+        Game.obstacles = Game.obstacles.filter(k => k !== key)
+
+        // ✅ 加入跳板集合
+        Game.jumpPads.add(key)
+
         player.tell("§a障碍已变为跳板")
 
     } else {
         return
     }
 
+
     // ===== 消耗物品 =====
-    player.mainHandItem.count--
+    //player.mainHandItem.count--
 
     // ===== 消耗回合 =====
     Game.turnIndex++
