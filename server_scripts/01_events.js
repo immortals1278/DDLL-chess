@@ -56,33 +56,60 @@ ItemEvents.rightClicked(event => {
     const piece = Game.pieces[uuid]
     if (!piece) return
 
+    let newX = piece.x
+    let newZ = piece.z
     let moved = false
 
     if (event.item.is("minecraft:redstone")) {
-        piece.z--
+        newZ--
         moved = true
     }
 
     if (event.item.is("minecraft:lapis_lazuli")) {
-        piece.z++
+        newZ++
         moved = true
     }
 
     if (event.item.is("minecraft:iron_ingot")) {
-        piece.x--
+        newX--
         moved = true
     }
 
     if (event.item.is("minecraft:gold_ingot")) {
-        piece.x++
+        newX++
         moved = true
     }
 
     if (!moved) return
 
-    // 边界限制
-    piece.x = Math.max(0, Math.min(Game.board.width - 1, piece.x))
-    piece.z = Math.max(0, Math.min(Game.board.height - 1, piece.z))
+    // ===== 边界检测 =====
+    if (newX < 0 || newX >= Game.board.width ||
+        newZ < 0 || newZ >= Game.board.height) {
+        player.tell("§c不能越界")
+        return
+    }
+
+    // ===== 障碍检测 =====
+    const key = `${newX},${newZ}`
+    if (Game.obstacles.has(key)) {
+        player.tell("§c前方有障碍物")
+        return
+    }
+
+    // ===== 棋子碰撞检测 =====
+    for (let id in Game.pieces) {
+        if (id === uuid) continue
+        const p = Game.pieces[id]
+        if (p.x === newX && p.z === newZ) {
+            player.tell("§c那里有其他棋子")
+            return
+        }
+    }
+
+    // ===== 所有检测通过后才真正赋值 =====
+    piece.x = newX
+    piece.z = newZ
+
 
     const worldX = Game.board.originX + piece.x * 2 
     const worldY = Game.board.originY + 1
@@ -116,6 +143,79 @@ if (piece.reachedEnd && piece.z === 0) {
     player.tell("§e移动完成")
 
     // 切换回合
+    Game.turnIndex++
+    if (Game.turnIndex >= Game.players.length) {
+        Game.turnIndex = 0
+    }
+})
+
+
+BlockEvents.rightClicked(event => {
+
+    const player = event.player
+    const level = event.level
+    const uuid = player.uuid
+
+    if (!Game.started) return
+
+    // 必须轮到当前玩家
+    const currentUUID = Game.players[Game.turnIndex]
+    if (uuid !== currentUUID) {
+        player.tell("§c还没到你")
+        return
+    }
+
+    // 必须手持圆石
+    if (player.mainHandItem.id !== "minecraft:cobblestone") return
+
+    const bx = event.block.pos.x
+    const bz = event.block.pos.z
+
+    // 转换为棋盘坐标
+    const gridX = Math.floor((bx - Game.board.originX) / 2)
+    const gridZ = Math.floor((bz - Game.board.originZ) / 2)
+
+    // 范围检测
+    if (gridX < 0 || gridX >= Game.board.width ||
+        gridZ < 0 || gridZ >= Game.board.height) {
+        player.tell("§c不在棋盘范围")
+        return
+    }
+
+    const key = `${gridX},${gridZ}`
+
+    // 已有障碍
+    if (Game.obstacles.has(key)) {
+        player.tell("§c这里已有障碍")
+        return
+    }
+
+    // 有棋子
+    for (let id in Game.pieces) {
+        const p = Game.pieces[id]
+        if (p.x === gridX && p.z === gridZ) {
+            player.tell("§c这里有棋子")
+            return
+        }
+    }
+
+    // ===== 放置障碍 =====
+    Game.obstacles.add(key)
+
+    const worldX = Game.board.originX + gridX * 2
+    const worldY = Game.board.originY + 1
+    const worldZ = Game.board.originZ + gridZ * 2
+
+    level.runCommandSilent(
+        `setblock ${worldX} ${worldY} ${worldZ} minecraft:obsidian`
+    )
+
+    player.tell("§7已放置障碍，回合结束")
+
+    // ===== 消耗物品 =====
+    player.mainHandItem.count--
+
+    // ===== 切换回合 =====
     Game.turnIndex++
     if (Game.turnIndex >= Game.players.length) {
         Game.turnIndex = 0

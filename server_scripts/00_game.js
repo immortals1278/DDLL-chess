@@ -14,7 +14,11 @@ const Game = {
         originZ: 0
     },
     pieces: {}, // uuid -> {x,z,entity}
-    moveMode: {} // uuid -> true/false
+    moveMode: {}, // uuid -> true/false
+    obstacles: new Set(), // 存 "x,z"
+    
+
+
 
 }
 
@@ -175,6 +179,23 @@ function endGame(level) {
     )//只沙了一个人，只有一个tag
 
     level.runCommandSilent("say §c游戏结束")
+
+    Game.obstacles.forEach(key => {
+
+    const [x,z] = key.split(",").map(Number)
+
+    const worldX = Game.board.originX + x * 2
+    const worldY = Game.board.originY + 1
+    const worldZ = Game.board.originZ + z * 2
+
+    level.runCommandSilent(
+        `setblock ${worldX} ${worldY} ${worldZ} air`
+    )
+})
+
+Game.obstacles.clear()
+
+
 }
 
 
