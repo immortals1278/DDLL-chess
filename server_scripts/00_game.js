@@ -107,7 +107,8 @@ function spawnPiece(player) {
     Game.pieces[player.uuid] = {
         x: 0,
         z: 0,
-        tag: tag
+        tag: tag,
+        reachedEnd: false
     }
 
     const worldX = Game.board.originX + 0.5
@@ -139,13 +140,41 @@ function startGame(level, firstPlayer) {
     if (!firstPlayer) return
 
     Game.started = true
+    Game.turnIndex = 0
+
+    // 🔥 关键：复制当前在线玩家
+    Game.players = level.server.players.map(p => p.uuid)
+
+    if (Game.players.length === 0) {
+        level.runCommandSilent("say 没有玩家")
+        Game.started = false
+        return
+    }
 
     generateBoard(level, firstPlayer)
 
-    const p = level.server.getPlayer(firstPlayer.uuid)
-    if (p) spawnPiece(p)
+    // 给所有玩家生成棋子
+    Game.players.forEach(uuid => {
+        const p = level.server.getPlayer(uuid)
+        if (p) spawnPiece(p)
+    })
 
-    level.runCommandSilent(`say 游戏开始`)
+    level.runCommandSilent("say 游戏开始")
+}
+
+
+function endGame(level) {
+
+    Game.started = false
+    Game.turnIndex = 0
+    Game.moveMode = {}
+    Game.pieces = {}
+
+    level.runCommandSilent(
+        `kill @e[type=minecraft:armor_stand,tag=player_piece]`
+    )//只沙了一个人，只有一个tag
+
+    level.runCommandSilent("say §c游戏结束")
 }
 
 

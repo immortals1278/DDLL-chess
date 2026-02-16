@@ -1,15 +1,5 @@
 // 玩家进入
-PlayerEvents.loggedIn(event => {
 
-    const player = event.player
-
-    if (!Game.players.includes(player.uuid)) {
-        Game.players.push(player.uuid)
-    }
-
-    
-
-})
 
 //按钮开始游戏
 BlockEvents.rightClicked(event => {
@@ -103,6 +93,23 @@ ItemEvents.rightClicked(event => {
 )
 
     player.tell(`§a已移动到 ${piece.x}, ${piece.z}`)
+
+    // 到达底部
+if (piece.z === Game.board.height - 1) {
+    piece.reachedEnd = true
+    player.tell("§b已到达终点，返回起点即可获胜")
+}
+
+// 如果已经到过终点，并且回到起点
+if (piece.reachedEnd && piece.z === 0) {
+
+    event.level.runCommandSilent(
+        `say §6${player.name.string} 获胜！`
+    )
+
+    endGame(event.level)
+    return
+}
 
     // 关闭移动模式
     Game.moveMode[uuid] = false
